@@ -31,6 +31,8 @@ import random
 import messaging.sms.submit
 from datetime import datetime, timedelta
 
+import sqlite3
+
 #RP-Message Type = 00
 #RP-Message Reference = GG -fill out later
 #RP-Originator Address = 00
@@ -43,31 +45,24 @@ TP_GENERIC_HEADER = '11GG'
 #MAX GSM time is 63 weeks
 MAX_GSM_TIME = 63 * 7
 
-def gen_header(reference, header):
-    return re.sub('GG', reference, header)
+def execute_cmd(db_loc, cmd):
+    conn = sqlite3.connect(db_loc)
+    cur = conn.cursor()
+    cur.execute(cmd)
+    res = cur.fetchone()
+    conn.close()
+    return res
 
-#gotta preserve 0s...
-def gen_hex(i):
-    tmp = hex(i)[2:]
-    if (len(tmp) == 1):
-        return "0" + tmp
-    else:
-        return tmp
-
-def gen_tpdu(to, text):
-    tmp = (messaging.sms.submit.SmsSubmit(str(to), text))
-    tmp._validity = timedelta(MAX_GSM_TIME)
-    #stripping the nonsense headers, will probably fix later
-    res = tmp.to_pdu()
-    return res[0].pdu[6:].lower() 
-
-def gen_body(to, text):
-    reference = str(hex(random.randint(17,255))[2:]) #random reference?
-    rp_header = gen_header(reference, RP_GENERIC_HEADER)
-    tp_header = gen_header(reference, TP_GENERIC_HEADER)
-    tp_user_data = gen_tpdu(to, text)
-    tp_len = (len(tp_header) + len(tp_user_data))/2 #octets, not bytes
-    return rp_header + gen_hex(tp_len) + tp_header + tp_user_data
+def check_existing_number(to):
+    print "Attempting to find " + to
+    to = to.split("@")[0]
+    db_loc = getGlobalVariable('openbts_db_loc')
+    cmd = "SELECT name FROM sip_buddies WHERE callerid=" + to
+    res = str(execute_cmd(db_loc,cmd))
+    print "Found " + res
+    
+    # Determine whether the callerid can be translated to the corresponding IMSI id
+    return res == None
 
 #forward the message to smqueue for store-and-forwarding
 def send_smqueue_message(to, fromm, text):
@@ -87,15 +82,21 @@ def send_smqueue_message(to, fromm, text):
     event.addHeader("proto", "sip");
     event.addHeader("to_proto", "sip");
     event.addHeader("dest_proto", "sip");
-    event.addHeader("from", "1002@169.229.125.233")
-    event.addHeader("from_full", "sip:" + "1002" + "@" + getGlobalVariable("domain"))
-    event.addHeader("to", getGlobalVariable("smqueue_profile") + "/sip:smsc@" + getGlobalVariable("smqueue_host") + ":" + getGlobalVariable("smqueue_port"))
+    event.addHeader("from", fromm)
+    #event.addHeader("from_full", "sip:" + "1002" + "@" + getGlobalVariable("domain"))
+    event.addHeader("from_full", "sip:" + fromm)
+    if check_existing_number(to):
+        event.addHeader("to", getGlobalVariable("smqueue_profile") + "/sip:smsc@" + getGlobalVariable("smqueue_host") + ":" + getGlobalVariable("smqueue_port"))
+    else:
+        event.addHeader("to", "internal/" + to)
     event.addHeader("subject", "SIMPLE_MESSAGE")
     event.addHeader("type", "text/plain");
     event.addHeader("hint", "the hint");
     event.addHeader("replying", "false");
     event.addBody(text)
     #event.addBody(gen_body(to, text));
+
+    consoleLog("info", event.serialize())
 
     event.fire()
 
