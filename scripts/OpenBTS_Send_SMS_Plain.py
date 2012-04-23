@@ -53,16 +53,16 @@ def execute_cmd(db_loc, cmd):
     conn.close()
     return res
 
-def check_existing_number(to):
-    print "Attempting to find " + to
+def check_existing_number(num):
+    print "Attempting to find " + num
     to = to.split("@")[0]
     db_loc = getGlobalVariable('openbts_db_loc')
-    cmd = "SELECT name FROM sip_buddies WHERE callerid=" + to
+    cmd = "SELECT name FROM sip_buddies WHERE callerid=" + num
     res = str(execute_cmd(db_loc,cmd))
     print "Found " + res
     
     # Determine whether the callerid can be translated to the corresponding IMSI id
-    return res == None
+    return res
 
 #forward the message to smqueue for store-and-forwarding
 def send_smqueue_message(to, fromm, text):
@@ -82,10 +82,14 @@ def send_smqueue_message(to, fromm, text):
     event.addHeader("proto", "sip");
     event.addHeader("to_proto", "sip");
     event.addHeader("dest_proto", "sip");
+    existing_name = check_existing_number(fromm)
+    if existing_name != None:
+        fromm = existing_name + "@" + fromm.split("@",1)[1]
+        
     event.addHeader("from", fromm)
     #event.addHeader("from_full", "sip:" + "1002" + "@" + getGlobalVariable("domain"))
     event.addHeader("from_full", "sip:" + fromm)
-    if check_existing_number(to):
+    if check_existing_number(to) == None:
         event.addHeader("to", getGlobalVariable("smqueue_profile") + "/sip:smsc@" + getGlobalVariable("smqueue_host") + ":" + getGlobalVariable("smqueue_port"))
     else:
         event.addHeader("to", "internal/" + to)
