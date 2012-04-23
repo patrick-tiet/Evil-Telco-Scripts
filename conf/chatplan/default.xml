@@ -2,11 +2,17 @@
 <include>
   <context name="default">
 
+<!--
     <extension name="demo">
       <condition field="to" expression="^(.*)$">
-	<!--	<action application="lua" data="test.lua"/> -->
 
 	<action application="reply" data="Hello, you said: ${_body}"/>
+      </condition>
+    </extension> -->
+
+    <extension name="demo">
+      <condition field="to" expression="^(.*)$">
+	<action application="python" data="OpenBTS_Send_SMS_Plain ${to}|${from}|${_body}"/>
       </condition>
     </extension>
 
