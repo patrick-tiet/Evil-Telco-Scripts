@@ -37,8 +37,8 @@ def execute_cmd(db_loc, cmd):
     conn.close()
     return res
 
-def err(msg):
-    consoleLog(msg)
+def bts_err(msg):
+    consoleLog("err", str(msg))
     exit(1)
 
 def parse_and_op(args):
@@ -48,9 +48,9 @@ def parse_and_op(args):
     db_loc = getGlobalVariable('openbts_db_loc')
     if (len(args) > 1):
         db_loc = args[1]
-
+    
     if not(db_loc):
-       err('Missing DB. Is openbts_db_loc defined?\n') 
+       bts_err('Missing DB. Is openbts_db_loc defined?\n') 
     
     try:
         res = execute_cmd(db_loc, cmd)
@@ -61,7 +61,7 @@ def parse_and_op(args):
 
 def chat(message, args):
     res = parse_and_op(args)
-    consoleLog('info', "Returned: " + res)
+    consoleLog('info', "Returned: " + res + "\n")
     message.chat_execute('set', '_openbts_ret=%s' % res)
 
 def fsapi(session, stream, env, args):

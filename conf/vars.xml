@@ -24,7 +24,7 @@
       affect the sip authentication.  Please review conf/directory/default.xml for more
       information on this topic.
   -->
-  <X-PRE-PROCESS cmd="set" data="domain=$${local_ip_v4}"/>
+  <X-PRE-PROCESS cmd="set" data="domain=127.0.0.1"/>
   <X-PRE-PROCESS cmd="set" data="domain_name=$${domain}"/>
   <X-PRE-PROCESS cmd="set" data="hold_music=local_stream://moh"/>
   <X-PRE-PROCESS cmd="set" data="use_profile=internal"/>
@@ -263,8 +263,17 @@
   <X-PRE-PROCESS cmd="set" data="external_tls_port=5081"/>
   <X-PRE-PROCESS cmd="set" data="external_ssl_enable=false"/>
   <X-PRE-PROCESS cmd="set" data="external_ssl_dir=$${base_dir}/conf/ssl"/>
-
-  <X-PRE-PROCESS cmd="set" data="openbts_db_loc=/var/lib/asterisk/sqlite3dir/sqlite3.db"/>
+  
+  <!-- OpenBTS Values -->
+  <X-PRE-PROCESS cmd="set" data="openbts_db_loc=$${base_dir}/ets/sqlite3.db"/>
   <X-PRE-PROCESS cmd="set" data="smqueue_port=5063"/>
-  <X-PRE-PROCESS cmd="set" data="smqueue_host=10.10.65.249"/>
+  <X-PRE-PROCESS cmd="set" data="smqueue_host=192.168.1.1"/>
+  <X-PRE-PROCESS cmd="set" data="smqueue_profile=internal"/>
+  
+  <!-- ETS Values -->
+  <X-PRE-PROCESS cmd="set" data="ets_dir=$${base_dir}/ets"/>
+  <X-PRE-PROCESS cmd="set" data="ets_log_dir=$${base_dir}/ets/log"/>
+  <X-PRE-PROCESS cmd="set" data="ets_censor_words=$${base_dir}/ets/censor.txt"/>
+  
 </include>
+
