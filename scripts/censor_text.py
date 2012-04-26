@@ -34,8 +34,10 @@ def chat(msg, args):
     ets_censor_words = getGlobalVariable("ets_censor_words")
     to = msg.getHeader("ets_sms_to")
     fromm = msg.getHeader("ets_sms_from")
-    content = msg.getHeader("ets_sms_body")
+    content = msg.getHeader("openbts_text")
     
+    consoleLog("info", "Censoring message: " + content + " from: " + fromm + " to: " + to)
     content = censor(parseFile(ets_censor_words), content)
-    msg.chat_execute('set', 'ets_sms_body=%s' % (content))
+    consoleLog("info", "Censored message: " + content + " from: " + fromm + " to: " + to)
+    msg.chat_execute('set', 'openbts_text=%s' % (content))
 

@@ -31,7 +31,9 @@ def chat(msg, args):
     timestamp = msg.getHeader("Event-Date-Local")
     to = msg.getHeader("ets_sms_to")
     fromm = msg.getHeader("ets_sms_from")
-    content = msg.getHeader("ets_sms_body")
+    content = msg.getHeader("openbts_text")
+
+    consoleLog("info", "Logging message: " + content + " from: " + fromm + " to: " + to)
     
     log_msgs(ets_log_dir, timestamp, to, fromm, content)
 
