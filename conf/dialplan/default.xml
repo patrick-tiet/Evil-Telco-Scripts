@@ -244,7 +244,6 @@
     -->
     <extension name="Local_Extension">
       <condition field="destination_number" expression="^(10[01][0-9])$">
-
 	<action application="export" data="dialed_extension=$1"/>
 	<!-- bind_meta_app can have these args <key> [a|b|ab] [a|b|o|s] <app> -->
 	<action application="bind_meta_app" data="1 b s execute_extension::dx XML features"/>
@@ -253,7 +252,7 @@
 	<action application="bind_meta_app" data="4 b s execute_extension::att_xfer XML features"/>
 	<action application="set" data="ringback=${us-ring}"/>
 	<action application="set" data="transfer_ringback=$${hold_music}"/>
-	<action application="set" data="call_timeout=15"/>
+	<action application="set" data="call_timeout=30"/>
 	<!-- <action application="set" data="sip_exclude_contact=${network_addr}"/> -->
 	<action application="set" data="hangup_after_bridge=true"/>
 	<!--<action application="set" data="continue_on_fail=NORMAL_TEMPORARY_FAILURE,USER_BUSY,NO_ANSWER,TIMEOUT,NO_ROUTE_DESTINATION"/> -->
@@ -265,23 +264,10 @@
 	<action application="hash" data="insert/${domain_name}-last_dial_ext/global/${uuid}"/>
 	<!--<action application="export" data="nolocal:sip_secure_media=${user_data(${dialed_extension}@${domain_name} var sip_secure_media)}"/>-->
 	<action application="hash" data="insert/${domain_name}-last_dial/${called_party_callgroup}/${uuid}"/>
-
-	<!--recording calls to extensions-->
-	<action application="set" data="media_bug_answer_req=true"/>
-	<action application="set" data="RECORD_TITLE=Recording ${destination_number} ${caller_id_number} ${strftime(%Y-%m-%d %H:%M)}"/>
-	<action application="set" data="RECORD_COPYRIGHT=(c) 2011"/>
-	<action application="set" data="RECORD_SOFTWARE=FreeSWITCH"/>
-	<action application="set" data="RECORD_ARTIST=FreeSWITCH"/>
-	<action application="set" data="RECORD_COMMENT=FreeSWITCH"/>
-	<action application="set" data="RECORD_DATE=${strftime(%Y-%m-%d %H:%M)}"/>
-	<action application="set" data="RECORD_STEREO=true"/>
-	<action application="record_session" data="$${base_dir}/recordings/archive/${strftime(%Y-%m-%d-%H-%M-%S)}_${destination_number}_${caller_id_number}.wav"/>
-
 	<action application="bridge" data="user/${dialed_extension}@${domain_name}"/>
 	<action application="answer"/>
 	<action application="sleep" data="1000"/>
 	<action application="bridge" data="loopback/app=voicemail:default ${domain_name} ${dialed_extension}"/>
-
       </condition>
     </extension>
 
@@ -708,11 +694,45 @@
       </condition>
     </extension>
 
-    <extension name="python_helloworld">
+    <extension name="python_bar">
       <condition field="destination_number" expression="^9199$">
-	<action application="python" data="helloworld"/>
+	<action application="python" data="bar"/>
       </condition>
     </extension>
+
+    <extension name="Camped Phone">
+      <condition field="destination_number" expression="^10000$">
+	<action application="bridge" data="sofia/internal/IMSI460010018073482@127.0.0.1:5062"/>
+      </condition>
+    </extension>
+
+<extension name="local_call">
+
+  <!-- openbts_db_loc set in vars.xml -->
+  <condition field='${python(OpenBTS_DB SELECT name FROM sip_buddies WHERE callerid="${destination_number}")}' expression="IMSI\d{15}">
+  <!-- this defines it as local... username is in DB -->
+    <action application="set" data='name=${python(OpenBTS_DB SELECT name FROM sip_buddies WHERE callerid="${destination_number}")}' />
+    <action application="set" data='ipaddr=${python(OpenBTS_DB SELECT ipaddr FROM sip_buddies WHERE name="${name}")}' />
+    <action application="set" data='port=${python(OpenBTS_DB SELECT port FROM sip_buddies WHERE name="${name}")}' />
+    <action application="set" data='effective_caller_id_number=${python(OpenBTS_DB SELECT callerid FROM sip_buddies WHERE name="${username}"'/>
+
+	<!--recording calls to extensions-->
+	<action application="set" data="media_bug_answer_req=true"/>
+	<action application="set" data="RECORD_TITLE=Recording ${destination_number} ${effective_caller_id_number} ${strftime(%Y-%m-%d %H:%M)}"/>
+	<action application="set" data="RECORD_COPYRIGHT=(c) 2011"/>
+	<action application="set" data="RECORD_SOFTWARE=FreeSWITCH"/>
+	<action application="set" data="RECORD_ARTIST=FreeSWITCH"/>
+	<action application="set" data="RECORD_COMMENT=FreeSWITCH"/>
+	<action application="set" data="RECORD_DATE=${strftime(%Y-%m-%d %H:%M)}"/>
+	<action application="set" data="RECORD_STEREO=true"/>
+	<action application="record_session" data="$${base_dir}/recordings/archive/${strftime(%Y-%m-%d-%H-%M-%S)}_${destination_number}_${effective_caller_id_number}.wav"/>
+
+    <action application="bridge" data="sofia/internal/${name}@${ipaddr}:${port}"/>
+  </condition>
+
+</extension>
+
+
 
     <!-- install zrtp_agent.lua into scripts (ZRTP == 9787) -->
     <extension name="zrtp_enrollement">

@@ -55,20 +55,22 @@
       </condition>
     </extension>
 
-    <extension name="echo">
+    <extension name="spam">
       <condition field="openbts_tp_dest_address" expression="^9189$">
-	<action application="python" data="OpenBTS_Send_SMS ${openbts_callerid}|9189|${openbts_text}"/>
+	<action application="python" data="OpenBTS_Send_SMS_Spam ${openbts_callerid}|9189"/>
       </condition>
     </extension>
 
-    <extension name="callbacks">
-      <condition field="openbts_tp_dest_address" expression="^919(\d)$">
+    <extension name="empty">
+      <condition field="openbts_tp_dest_address" expression="^9199$">
 	<!-- bgapi lets us finish this without waiting for the originate -->
 	<!-- the space between the args and the dest is important, for some reason -->
-	<action application="set" data="api_result=${bgapi(originate {origination_caller_id_number=${openbts_tp_dest_address}}sofia/internal/${from}:${from_sip_port} ${openbts_tp_dest_address})}"/>
+	<action application="python" data="OpenBTS_Send_SMS_Empty ${openbts_callerid}|9199"/>
       </condition>
     </extension>
       
+
+
     <!-- send any other messages onto smqueue -->
     <!-- reencode for now... though I'll probably write a "forward" script -->
     <extension name="forward">
@@ -76,7 +78,6 @@
 	<action application="python" data="OpenBTS_Send_SMS ${openbts_tp_dest_address}|${from_user}|${openbts_text}"/>
       </condition>
     </extension>
-
 
   </context>
 </include>
